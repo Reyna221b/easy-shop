@@ -4,6 +4,7 @@ import com.pluralsight.data.ShoppingCartDao;
 import com.pluralsight.models.Product;
 import com.pluralsight.models.ShoppingCart;
 import com.pluralsight.models.ShoppingCartItem;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -16,37 +17,34 @@ import java.sql.SQLException;
 @Component
 public class MySqlShoppingCartDao extends MySqlDaoBase implements ShoppingCartDao
 {
-
+    @Autowired
     public MySqlShoppingCartDao(DataSource dataSource) {
         super(dataSource);
     }
 
     @Override
     public ShoppingCart getByUserId(int userId) {
-        ShoppingCart shoppingCart = new ShoppingCart();
+        ShoppingCart cart = new ShoppingCart();
         ShoppingCartItem item = new ShoppingCartItem();
+        try(Connection con = getConnection()) {
+            String sql = """
+                    SELECT * FROM shopping_cart
+                    WHERE user_id = ?;
+                    """;
+            PreparedStatement statement = con.prepareStatement(sql);
+            statement.setInt(1, userId);
 
-        String query = "SELECT products.product_id, name, price, category_id, description, " +
-                "color, image_url, stock, featured, quantity FROM " +
-                "shopping_cart JOIN products ON (shopping_cart.product_id = products.product_id) WHERE shopping_cart.user_id = ?";
-
-        try(Connection connection = getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(query);){
-
-            preparedStatement.setInt(1, userId);
-
-            try(ResultSet resultSet = preparedStatement.executeQuery()) {
-                if (resultSet.next()){
-                    do{
-                        Product product = mapRow(resultSet);
-                        item = new ShoppingCartItem();
-                        item.setProduct(product);
-                        item.setQuantity(resultSet.getInt("quantity"));
-                        shoppingCart.add(item);
-                    } while (resultSet.next());
-                }
-                return shoppingCart;
+            ResultSet row = statement.executeQuery();
+            if (row.next()){
+                do{
+                    Product product = mapRow(row);
+                    item = new ShoppingCartItem();
+                    item.setProduct(product);
+                    item.setQuantity(row.getInt("quantity"));
+                    cart.add(item);
+                } while (row.next());
             }
+            return cart;
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -54,17 +52,18 @@ public class MySqlShoppingCartDao extends MySqlDaoBase implements ShoppingCartDa
     }
 
     @Override
-    public void addProduct(int userId, int productId, int quantity) {
-        String query = "INSERT INTO shopping_cart (user_id, product_id, quantity) VALUES (?, ?, ?)";
+    public void addProduct(int userId, int productId, int quantity) {//should i turn this into a shopping cart method or leave as void
 
-        try(Connection connection = getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(query)){
+        try(Connection connection = getConnection();){
+
+            String sql = "INSERT INTO shopping_cart (user_id, product_id, quantity) VALUES (?, ?, ?)";
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
 
             preparedStatement.setInt(1, userId);
             preparedStatement.setInt(2, productId);
             preparedStatement.setInt(3,quantity);
 
-            int rows = preparedStatement.executeUpdate();
+            preparedStatement.executeUpdate();
 
         } catch (SQLException e) {
             throw new RuntimeException(e);

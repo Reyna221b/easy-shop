@@ -1,7 +1,7 @@
 # Easy-Shop Application
 
 ## What is easy shop? 
-It is an application/ online store named easy shop. I assisted with the project by fixing bugs and adding new features. The website uses consist of Sring Boot API and a MySQL database for storage. The purpose of this project was to have a functioning website that allows the user to login in and register, browse categories and filter through options. We mainly worked on fixing the API's.
+It is an application/ online store named easy shop. I assisted with the project by fixing bugs and adding new features. The website consist of Sring Boot API and a MySQL database for storage. The purpose of this project was to have a functioning website that allows the user to login in and register, browse categories and filter through options. We mainly worked on fixing the API's.
 
 ## Application Screens
 >The First two images are the categories controller and the sql categoriesDao. Those two classes are ones I heavily worked on to get part of the website displaying correctly. 
